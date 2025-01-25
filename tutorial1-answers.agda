@@ -116,25 +116,51 @@ data IsZero : Nat → Set where
   case-zero : IsZero zero
 
 data IsNonzero : Nat → Set where
-  case-succ : (n : Nat) → IsNonzero (succ n)
+  case-succ : (x : Nat) → IsNonzero (succ x)
 
 -- TUTORIAL: Prove that the sum of two numbers, both of which are zero, is zero again.
 sum-zero : (x y : Nat) → IsZero x → IsZero y → IsZero (x + y)
 sum-zero .zero .zero case-zero case-zero = case-zero
 
--- TUTORIAL: State and prove: The sum of two numbers, the first of which is nonzero, is nonzero.
-sum-nonzero : (x y : Nat) → IsNonzero x → IsZero y → IsNonzero (x + y)
-sum-nonzero .(succ n) .zero (case-succ n) case-zero = case-succ (n + zero)
+-- TUTORIAL: State and prove: The sum of two numbers, the *first* of which is nonzero, is nonzero.
+sum-nonzero-first : (x y : Nat) → IsNonzero x → IsNonzero (x + y)
+sum-nonzero-first .(succ x) y (case-succ x) = case-succ (x + y)
+
+-- TUTORIAL: State and prove: The sum of two numbers, the *second* of which is nonzero, is nonzero.
+sum-nonzero-second : (x y : Nat) → IsNonzero y → IsNonzero (x + y)
+sum-nonzero-second zero     (succ y) (case-succ y) = case-succ y
+sum-nonzero-second (succ x) (succ y) (case-succ y) = case-succ (x + succ y)
 
 -- EXERCISE: Prove that the (contradictory) assumption that zero is nonzero implies
 -- the (also contradictory) statement that succ zero is zero.
 zero-is-not-nonzero : IsNonzero zero → IsZero (succ zero)
 zero-is-not-nonzero ()
 
+-- EXERCISE: Prove that multiplication of zero by any number, is zero
+zero-absorb-first : (x y : Nat) → IsZero x → IsZero (x * y)
+zero-absorb-first .zero y case-zero = case-zero
+
 -- EXERCISE*: Prove that multiplication of any number by zero, is zero
-zero-absorb : (x y : Nat) → IsZero x → IsZero (y * x)
-zero-absorb .zero zero     case-zero = case-zero
-zero-absorb .zero (succ y) case-zero = sum-zero zero (y * zero) case-zero (zero-absorb zero y case-zero)
+zero-absorb-second : (x y : Nat) → IsZero y → IsZero (x * y)
+zero-absorb-second zero     .zero case-zero = case-zero
+zero-absorb-second (succ x) .zero case-zero = sum-zero zero (x * zero) case-zero (zero-absorb-second x zero case-zero)
+
+-- EXERCISE*: Prove that if x times y is nonzero, then y must be nonzero
+mult-nonzero-is-nonzero : (x y : Nat) → IsNonzero (x * y) → IsNonzero y
+mult-nonzero-is-nonzero zero     zero     p = p
+mult-nonzero-is-nonzero (succ x) zero     p = mult-nonzero-is-nonzero x zero p
+mult-nonzero-is-nonzero (succ x) (succ y) p = case-succ y
+
+-- EXERCISE**: Prove that, if we assume the statement "multiplying a nonzero 
+-- number by any other number is nonzero", then we can show that zero is 
+-- nonzero (i.e. a contradictory statement!).
+mult-nonzero-contr : ((x y : Nat) → IsNonzero x → IsNonzero (x * y)) → IsNonzero zero
+mult-nonzero-contr f = mult-nonzero-is-nonzero (succ zero) zero (f (succ zero) zero (case-succ zero))
+
+
+-- ────────────────────────────────────────────────────
+-- ────[ FIRST PROOFS WITH PROPOSITIONAL EQUALITY ]────
+-- ────────────────────────────────────────────────────
 
 data IsEq : Nat → Nat → Set where
   refl : (n : Nat) → IsEq n n
@@ -148,6 +174,7 @@ one-unit-* : (x : Nat) → IsEq (x * (succ zero)) x
 one-unit-* zero     = refl zero
 one-unit-* (succ x) = eq-succ (x * (succ zero)) x (one-unit-* x)
 
+-- EXERCISE*: Prove
 
 -- ─────────────────
 -- ────[ TYPES ]────

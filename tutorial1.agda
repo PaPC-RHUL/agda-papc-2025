@@ -54,9 +54,6 @@ _&&_ : Bool → Bool → Bool
 a && b = {!   !}
 
 -- EXERCISE: Implement boolean "or".
--- For example:
---  "false || true" should evaluate to "true".
---  "true  || true" should evaluate to "true".
 _||_ : Bool → Bool → Bool
 a || b = {!   !}
 
@@ -106,18 +103,41 @@ data IsNonzero : Nat → Set where
 sum-zero : (x y : Nat) → IsZero x → IsZero y → IsZero (x + y)
 sum-zero = {!   !}
 
--- TUTORIAL: State and prove: The sum of two numbers, the first of which is nonzero, is nonzero.
-sum-nonzero : {!   !}
-sum-nonzero = {!   !}
+-- TUTORIAL: State and prove: The sum of two numbers, the *first* of which is nonzero, is nonzero.
+sum-nonzero-first : {!   !}
+sum-nonzero-first = {!   !}
+
+-- TUTORIAL: State and prove: The sum of two numbers, the *second* of which is nonzero, is nonzero.
+sum-nonzero-second : {!   !}
+sum-nonzero-second = {!   !}
 
 -- EXERCISE: Prove that the (contradictory) assumption that zero is nonzero implies
 -- the (also contradictory) statement that succ zero is zero.
 zero-is-not-nonzero : IsNonzero zero → IsZero (succ zero)
 zero-is-not-nonzero = {!   !}
 
+-- EXERCISE: Prove that multiplication of zero by any number, is zero
+zero-absorb-first : (x y : Nat) → IsZero x → IsZero (x * y)
+zero-absorb-first = {!   !}
+
 -- EXERCISE*: Prove that multiplication of any number by zero, is zero
-zero-absorb : (x y : Nat) → IsZero x → IsZero (y * x)
-zero-absorb = {!   !}
+zero-absorb-second : (x y : Nat) → IsZero y → IsZero (x * y)
+zero-absorb-second = {!   !}
+
+-- EXERCISE*: Prove that if x times y is nonzero, then y must be nonzero
+mult-nonzero-is-nonzero : (x y : Nat) → IsNonzero (x * y) → IsNonzero y
+mult-nonzero-is-nonzero = {!   !}
+
+-- EXERCISE**: Prove that, if we assume the statement "multiplying a nonzero 
+-- number by any other number is nonzero", then we can show that zero is 
+-- nonzero (i.e. a contradictory statement!).
+mult-nonzero-contr : ((x y : Nat) → IsNonzero x → IsNonzero (x * y)) → IsNonzero zero
+mult-nonzero-contr f = {!   !}
+
+
+-- ────────────────────────────────────────────────────
+-- ────[ FIRST PROOFS WITH PROPOSITIONAL EQUALITY ]────
+-- ────────────────────────────────────────────────────
 
 data IsEq : Nat → Nat → Set where
   refl : (n : Nat) → IsEq n n
