@@ -46,11 +46,11 @@ a * b = {!   !}
 data Bool : Set where
 
 -- TUTORIAL: Implement boolean "not"
-! : Bool → Bool
+! : {!   !}
 ! a = {!   !}
 
 -- TUTORIAL: Implement boolean "and"
-_&&_ : Bool → Bool → Bool
+_&&_ : {!   !}
 a && b = {!   !}
 
 -- EXERCISE: Implement boolean "or".
