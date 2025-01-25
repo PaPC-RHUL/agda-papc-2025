@@ -28,14 +28,19 @@ data Nat : Set where
 
 -- TUTORIAL: Define addition for natural numbers.
 _+_ : Nat → Nat → Nat
-a + b = {!   !}
+zero   + b = b
+succ a + b = succ (a + b)
 
 -- EXERCISE: Define multiplication for natural numbers.
 -- Hint: multiplication is just repeated addition!
 _*_ : Nat → Nat → Nat
-a * b = {!   !}
+zero   * b = zero
+succ a * b = b + (a * b)
 
 -- EXERCISE*: Define exponentiation!
+_^_ : Nat → Nat → Nat
+a ^ zero     = succ zero
+a ^ (succ b) = a * (a ^ b)
 
 
 -- ────────────────────
@@ -44,35 +49,40 @@ a * b = {!   !}
 
 -- TUTORIAL: Define the type Bool of booleans
 data Bool : Set where
+  true  : Bool
+  false : Bool
 
 -- TUTORIAL: Implement boolean "not"
 ! : Bool → Bool
-! a = {!   !}
+! true  = false
+! false = true
 
 -- TUTORIAL: Implement boolean "and"
 _&&_ : Bool → Bool → Bool
-a && b = {!   !}
+true  && b = b
+false && b = false 
 
 -- EXERCISE: Implement boolean "or".
 -- For example:
 --  "false || true" should evaluate to "true".
 --  "true  || true" should evaluate to "true".
 _||_ : Bool → Bool → Bool
-a || b = {!   !}
+true  || b = true
+false || b = b
 
 -- EXERCISE: Implement a function "is-always-true"? which checks whether
 -- a given input function (of type Bool → Bool) is constantly true. 
 -- For instance, if f x = x, then "is-always-true f" should evaluate 
 -- to "false".
 is-always-true : (Bool → Bool) → Bool
-is-always-true f = {!   !}
+is-always-true f = f true && f false
 
 -- EXERCISE: Implement a function "is-always-true'" which checks whether
 -- a given input function of two arguments is constantly true. For
 -- instance, if f x y = true for all x y, then "is-always-true' f" should 
 -- evaluate to "true".
 is-always-true₂ : (Bool → Bool → Bool) → Bool
-is-always-true₂ f = {!   !}
+is-always-true₂ f = is-always-true (f true) && is-always-true (f false)
 
 
 -- ────────────────────────────────────────
@@ -83,13 +93,19 @@ is-always-true₂ f = {!   !}
 -- input numbers are equal. For instance, "eq? zero zero" should evaluate
 -- to "true" while "eq? zero (succ zero)" should evaluate to "false".
 eq? : Nat → Nat → Bool
-eq? a b = {!   !}
+eq? zero     zero     = true
+eq? zero     (succ _) = false
+eq? (succ _) zero     = false
+eq? (succ a) (succ b) = eq? a b
 
 -- EXERCISE: Define a function that returns true if the
 -- first argument is less than or equal to the second, 
 -- and false otherwise.
 _≤?_ : Nat → Nat → Bool
-a ≤? b = {!   !}
+zero   ≤? zero   = true
+zero   ≤? succ b = true
+succ a ≤? zero   = false
+succ a ≤? succ b = a ≤? b
 
 
 -- ─────────────────────────────────────────────
@@ -104,31 +120,34 @@ data IsNonzero : Nat → Set where
 
 -- TUTORIAL: Prove that the sum of two numbers, both of which are zero, is zero again.
 sum-zero : (x y : Nat) → IsZero x → IsZero y → IsZero (x + y)
-sum-zero = {!   !}
+sum-zero .zero .zero case-zero case-zero = case-zero
 
 -- TUTORIAL: State and prove: The sum of two numbers, the first of which is nonzero, is nonzero.
-sum-nonzero : {!   !}
-sum-nonzero = {!   !}
+sum-nonzero : (x y : Nat) → IsNonzero x → IsZero y → IsNonzero (x + y)
+sum-nonzero .(succ n) .zero (case-succ n) case-zero = case-succ (n + zero)
 
 -- EXERCISE: Prove that the (contradictory) assumption that zero is nonzero implies
 -- the (also contradictory) statement that succ zero is zero.
 zero-is-not-nonzero : IsNonzero zero → IsZero (succ zero)
-zero-is-not-nonzero = {!   !}
+zero-is-not-nonzero ()
 
 -- EXERCISE*: Prove that multiplication of any number by zero, is zero
 zero-absorb : (x y : Nat) → IsZero x → IsZero (y * x)
-zero-absorb = {!   !}
+zero-absorb .zero zero     case-zero = case-zero
+zero-absorb .zero (succ y) case-zero = sum-zero zero (y * zero) case-zero (zero-absorb zero y case-zero)
 
 data IsEq : Nat → Nat → Set where
   refl : (n : Nat) → IsEq n n
 
 -- EXERCISE*: Prove that if x = y, then succ x = succ y.
 eq-succ : (x y : Nat) → IsEq x y → IsEq (succ x) (succ y)
-eq-succ = {!   !}
+eq-succ x .x (refl .x) = refl (succ x)
 
 -- EXERCISE*: Prove that multiplication of any number x by 1 (succ zero), is x
 one-unit-* : (x : Nat) → IsEq (x * (succ zero)) x
-one-unit-* = {!   !}
+one-unit-* zero     = refl zero
+one-unit-* (succ x) = eq-succ (x * (succ zero)) x (one-unit-* x)
+
 
 -- ─────────────────
 -- ────[ TYPES ]────
@@ -137,3 +156,11 @@ one-unit-* = {!   !}
 -- EXERCISE*: Describe the following type in simple terms. What are its values?
 data Weird : Set where
   foo : Weird → Weird
+
+-- In order to construct an element of Weird, we can only use the constructor foo.
+-- However, to apply foo, we already need to have an element of Weird. For an element
+-- of Weird to exist, an element of Weird already needs to exist - this is circular
+-- reasoning.
+-- The problem here is the lack of a base case - some constructor that creates an 
+-- element of type Weird, without already requiring one exists (as an example, consider
+-- the constructor zero for Nat).

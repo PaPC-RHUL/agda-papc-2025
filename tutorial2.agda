@@ -6,18 +6,18 @@
   how to define functions with lambda syntax. 
   Basics of lambda calculus (encoding of Booleans).
 
-  ┌─ ADGAPAD SHORTCUTS ───────────────┐    ┌─ BACKSLASH CHARACTERS ─┐
-  │ C-c C-l   = load file             │    │ \neg   = ¬             │
-  │ C-c C-c   = case split            │    │ \alpha = α             │
-  │ C-c C-SPC = check hole            │    │ \to    = →             │
-  │ C-c C-,   = see context           │    │ \cdot  = ·             │
-  │ C-c C-.   = see context and goal  │    │ \::    = ∷             │
-  │ C-c C-d   = display type          │    │ \==    = ≡             │
+  ┌─ ADGA MODE SHORTCUTS ─────────────┐    ┌─ BACKSLASH CHARACTERS ─┐
+  │ C-c C-l   = load file             │    │ \neg    = ¬            │
+  │ C-c C-c   = case split            │    │ \alpha  = α            │
+  │ C-c C-SPC = check hole            │    │ \to     = →            │
+  │ C-c C-,   = see context and goal  │    │ \cdot   = ·            │
+  │ C-c C-.   = see context, goal and │    | \bN     = ℕ            |
+  │             type of current term  │    │ \::     = ∷            │
+  │ C-c C-d   = display type          │    │ \==     = ≡            │
   │ C-c C-v   = evaluate expression   │    └────────────────────────┘
-  │ C-z       = enable Vi keybindings │    Use M-x describe-char to
-  │ C-x C-+   = increase font size    │    lookup input method for
-  └───────────────────────────────────┘    symbol under cursor.
-
+  └───────────────────────────────────┘    Use C-x C-= to lookup
+                                           input method for highlighted 
+                                           symbol.
 -}
 
 variable
