@@ -21,7 +21,7 @@
 
 -- We are now going to use the type ℕ (shortcut \bN) of natural numbers 
 -- in the Agda standard library, rather than the type Nat that we defined
--- in tutorial one.
+-- in tutorial ontutorial2.agdae.
 -- Note: the successor construct for ℕ is written "suc" (with one "c")!
 -- Using Data.Nat lets us specify numbers using decimal notation (6, 13, etc.)
 open import Data.Nat
@@ -89,14 +89,14 @@ example3 p = fst p + 1
 -- define the following (higher-order) functions which convert between the two 
 -- types of "functions of two arguments".
 curry : {A B C : Set} → (A × B → C) → A → B → C
-curry = {!   !}
+curry f a b = f (a , b)
 
 uncurry : {A B C : Set} → (A → B → C) → A × B → C
-uncurry = {!   !}
+uncurry f (a , b) = f a b
 
 -- EXERCISE: Define this higher-order function that "runs two functions in parallel"
 pairf : {A B C D : Set} → (A → B) × (C → D) → A × C → B × D
-pairf = {!   !}
+pairf (f , g) (a , c) = (f a , g c)
 
 
 -- ─────────────────
@@ -127,7 +127,8 @@ example6 (inr true)  = 1
 -- EXERCISE: Define this higher-order function that "conditionally runs one
 -- of two functions"
 sumf : {A B C : Set} → (A → B) × (C → B) → A ⊎ C → B
-sumf = {!   !}
+sumf (f , g) (inl a) = f a
+sumf (f , g) (inr c) = g c
 
 
 -- ────────────────────────
@@ -164,31 +165,42 @@ to-from tt1 = refl
 
 -- EXERCISE*: Show that A × ⊤ is isomorphic to A
 frompair : {A : Set} → A × ⊤ → A
-frompair = {!   !}
+frompair (a , tt) = a
 
 topair : {A : Set} → A → A × ⊤
-topair = {!   !}
+topair a = (a , tt)
 
 frompair-topair : {A : Set} → (x : A) → frompair (topair x) ≡ x
-frompair-topair = {!   !}
+frompair-topair a = refl
 
 topair-frompair : {A : Set} → (x : A × ⊤) → topair (frompair x) ≡ x
-topair-frompair = {!   !}
+topair-frompair (a , tt) = refl
 
 -- EXERCISE*: Show that A ⊎ ⊥ is isomorphic to A
 fromsum : {A : Set} → A ⊎ ⊥ → A
-fromsum = {!   !}
+fromsum (inl a) = a
 
 tosum : {A : Set} → A → A ⊎ ⊥
-tosum = {!   !}
+tosum a = inl a
 
 fromsum-tosum : {A : Set} → (x : A) → fromsum (tosum x) ≡ x
-fromsum-tosum = {!   !}
+fromsum-tosum a = refl
 
 tosum-fromsum : {A : Set} → (x : A ⊎ ⊥) → tosum (fromsum x) ≡ x
-tosum-fromsum = {!   !}
+tosum-fromsum (inl a) = refl
 
 -- EXERCISE*: Show that A × B is isomorphic to B × A
+f1 : {A B : Set} → A × B → B × A
+f1 (a , b) = (b , a)
+
+t1 : {A B : Set} → B × A → A × B
+t1 (b , a) = (a , b)
+
+f1t1 : {A B : Set} → (x : B × A) → f1 (t1 x) ≡ x
+f1t1 (b , a) = refl
+
+t1f1 : {A B : Set} → (x : A × B) → t1 (f1 x) ≡ x
+t1f1 (a , b) = refl
 
 -- EXERCISE*: Show that A × (B × C) is isomorphic to (A × B) × C
 
@@ -199,3 +211,26 @@ tosum-fromsum = {!   !}
 -- EXERCISE****: Show that ℕ ⊎ ℕ is isomorphic to ℕ
 -- This is *very* difficult and may require some equality combinators and 
 -- extra functions. Think of it as a project.
+
+open import Data.Nat.Properties
+
+f3 : ℕ ⊎ ℕ → ℕ
+f3 (inl n) = 2 * n
+f3 (inr n) = 2 * n + 1
+
+iseven : ℕ → Bool
+iseven zero = true
+iseven (suc zero) = false
+iseven (2+ n) = iseven n
+
+t3 : ℕ → ℕ ⊎ ℕ
+t3 n = if iseven n 
+        then inl (n / 2) 
+        else inr ((n / 2) ∸ 1)
+
+f3t3 : (n : ℕ) → f3 (t3 n) ≡ n
+f3t3 zero       = refl
+f3t3 (suc zero) = refl
+f3t3 (2+ n) with iseven n
+... | false = {!   !}
+... | true  = {!   !}

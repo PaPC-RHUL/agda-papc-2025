@@ -12,9 +12,9 @@
   │             type of current term  │    │ \::     = ∷            │
   │ C-c C-d   = infer type            │    │ \==     = ≡            │
   │ C-c C-v   = evaluate expression   │    └────────────────────────┘
-  └───────────────────────────────────┘    Use C-x C-= to lookup
-                                           input method for highlighted 
-                                           symbol.
+  └───────────────────────────────────┘   Use C-x C-= to lookup
+                                          input method for highlighted 
+                                          symbol.
 -}
 
 -- ───────────────────────────
@@ -28,12 +28,14 @@ data Nat : Set where
 
 -- TUTORIAL: Define addition for natural numbers.
 _+_ : Nat → Nat → Nat
-a + b = {!   !}
+zero + b = b
+succ a + b = succ (a + b)
 
 -- EXERCISE: Define multiplication for natural numbers.
 -- Hint: multiplication is just repeated addition!
 _*_ : Nat → Nat → Nat
-a * b = {!   !}
+zero * b   = zero
+succ a * b = b + (a * b)
 
 -- EXERCISE*: Define exponentiation!
 
@@ -44,25 +46,30 @@ a * b = {!   !}
 
 -- TUTORIAL: Define the type Bool of booleans
 data Bool : Set where
+  true : Bool
+  false : Bool
 
 -- TUTORIAL: Implement boolean "not"
-! : {!   !}
-! a = {!   !}
+! : Bool → Bool    -- \to or \-> for →
+! true = false
+! false = true
 
--- TUTORIAL: Implement boolean "and"
-_&&_ : {!   !}
-a && b = {!   !}
+-- TUTORIAL: {!   !}Implement boolean "and"
+_&&_ : Bool → Bool → Bool
+true  && b = b
+false && b = false
 
 -- EXERCISE: Implement boolean "or".
 _||_ : Bool → Bool → Bool
-a || b = {!   !}
+true || b = {!   !}
+false || b = {!   !}
 
 -- EXERCISE: Implement a function "is-always-true"? which checks whether
 -- a given input function (of type Bool → Bool) is constantly true. 
 -- For instance, if f x = x, then "is-always-true f" should evaluate 
 -- to "false".
 is-always-true : (Bool → Bool) → Bool
-is-always-true f = {!   !}
+is-always-true f = f true && f false
 
 -- EXERCISE: Implement a function "is-always-true'" which checks whether
 -- a given input function of two arguments is constantly true. For
@@ -100,16 +107,17 @@ data IsNonzero : Nat → Set where
   case-succ : (n : Nat) → IsNonzero (succ n)
 
 -- TUTORIAL: Prove that the sum of two numbers, both of which are zero, is zero again.
-sum-zero : (x y : Nat) → IsZero x → IsZero y → IsZero (x + y)
-sum-zero = {!   !}
+sum-zero : (x : Nat) → (y : Nat) → (p : IsZero x) → IsZero y → IsZero (x + y)
+sum-zero .zero .zero case-zero case-zero = case-zero
 
 -- TUTORIAL: State and prove: The sum of two numbers, the *first* of which is nonzero, is nonzero.
 sum-nonzero-first : {!   !}
 sum-nonzero-first = {!   !}
 
 -- TUTORIAL: State and prove: The sum of two numbers, the *second* of which is nonzero, is nonzero.
-sum-nonzero-second : {!   !}
-sum-nonzero-second = {!   !}
+sum-nonzero-second : (x : Nat) → (y : Nat) → IsNonzero y → IsNonzero (x + y)
+sum-nonzero-second zero y p = p
+sum-nonzero-second (succ x) .(succ n) (case-succ n) = case-succ (x + (succ n))
 
 -- EXERCISE: Prove that the (contradictory) assumption that zero is nonzero implies
 -- the (also contradictory) statement that succ zero is zero.
@@ -133,7 +141,6 @@ mult-nonzero-is-nonzero = {!   !}
 -- nonzero (i.e. a contradictory statement!).
 mult-nonzero-contr : ((x y : Nat) → IsNonzero x → IsNonzero (x * y)) → IsNonzero zero
 mult-nonzero-contr f = {!   !}
-
 
 -- ────────────────────────────────────────────────────
 -- ────[ FIRST PROOFS WITH PROPOSITIONAL EQUALITY ]────
