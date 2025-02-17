@@ -1,9 +1,8 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 {-
   PaPC AGDA 2024
-  Tutorial 2: Algebraic data types
-
-  Introduction to the concept of algebraic data types. Introduction to idea of
-  type equivalence (isomorphism).
+  Tutorial 2: Properties of equality, and more involved 
+  proofs about natural numbers!
 
   ┌─ ADGA MODE SHORTCUTS ─────────────┐    ┌─ BACKSLASH CHARACTERS ─┐
   │ C-c C-l   = load file             │    │ \neg    = ¬            │
@@ -19,218 +18,243 @@
                                            symbol.
 -}
 
+
 -- We are now going to use the type ℕ (shortcut \bN) of natural numbers 
 -- in the Agda standard library, rather than the type Nat that we defined
--- in tutorial ontutorial2.agdae.
+-- in tutorial one.
 -- Note: the successor construct for ℕ is written "suc" (with one "c")!
 -- Using Data.Nat lets us specify numbers using decimal notation (6, 13, etc.)
-open import Data.Nat
-open import Data.Bool 
-
-open import Relation.Binary.PropositionalEquality
-
--- ─────────────────────
--- ────[ SINGLETON ]────
--- ─────────────────────
-
--- The type with only one element
--- You can write ⊤ with \top
-data ⊤ : Set where
-  tt : ⊤
-
--- We can always map into ⊤
-unit : {A : Set} → A → ⊤
-unit a = tt
-
--- ──────────────────────
--- ────[ EMPTY TYPE ]────
--- ──────────────────────
-
--- The type with no elements. Notice there are no
--- constructors!
--- You can write ⊥ with \bot
-data ⊥ : Set where
-
--- We can always map out of ⊥. Notice that we
--- don't actually need to provide a definition,
--- since when we case-split on the input of type ⊥,
--- Agda can tell that it is impossible to construct
--- one.
-absurd : {A : Set} → ⊥ → A
-absurd ()
+open import Data.Nat hiding (_≤_)
+open import Data.Bool hiding (_≤_)
 
 -- ────────────────────
--- ────[ PRODUCTS ]────
+-- ────[ EQUALITY ]────
 -- ────────────────────
 
--- The type of "pairs of an element of A and an element of B"
--- i.e. the type ℕ × Bool is the type whose elements are (ordered) 
--- pairs of natural numbers and Booleans. 
--- You can write × with \times
-record _×_ (A B : Set) : Set where
-  constructor _,_
-  field
-    fst : A
-    snd : B
-open _×_ -- This is required to be able to write "fst" instead of "_×_.fst"
+-- The equality type. ≡ is written as \==. 
+infix 4 _≡_
+data _≡_ {A : Set} : A → A → Set where
+  refl : {a : A} → a ≡ a
 
--- We call the type A × B the "product of A and B"
+{-
+  To do more complicated equational reasoning, we need to develop some helper
+  functions that let us manipulate equalities.
 
-example1 : ℕ × Bool
-example1 = (1 , false)
+  For example, we need to be able to infer that if we have
+   - x ≡ y 
+   - y ≡ z
+  then x ≡ z. This property is called *transitivity* of equality.
+-}
 
-example2 : ℕ × Bool → ℕ
-example2 (n , b) = n + 1
+-- TUTORIAL: Transitivity of equality
+trans : {A : Set} {x y z : A} → x ≡ y → y ≡ z → x ≡ z
+trans refl q = q
 
-example3 : ℕ × Bool → ℕ
-example3 p = fst p + 1
+-- EXERCISE: Symmetry of equality
+sym : {A : Set} {x y : A} → x ≡ y → y ≡ x
+sym refl = refl
 
--- EXERCISE: Product types have interesting connections to function types...
--- define the following (higher-order) functions which convert between the two 
--- types of "functions of two arguments".
-curry : {A B C : Set} → (A × B → C) → A → B → C
-curry f a b = f (a , b)
+-- TUTORIAL: Every function is congruent wrt equality
+cong : {A B : Set} {x y : A} (f : A → B) → x ≡ y → f x ≡ f y
+cong f refl = refl
 
-uncurry : {A B C : Set} → (A → B → C) → A × B → C
-uncurry f (a , b) = f a b
+-- EXERCISE: You can use equality to substitute
+subst : {A : Set} {x y : A} (P : A → Set) → x ≡ y → P x → P y
+subst P refl px = px
 
--- EXERCISE: Define this higher-order function that "runs two functions in parallel"
-pairf : {A B C D : Set} → (A → B) × (C → D) → A × C → B × D
-pairf (f , g) (a , c) = (f a , g c)
+-- With these, we can now combine equalities together in various ways. 
+-- Lets prove some more interesting properties about natural numbers!
 
+-- First we'll introduce some syntax to let us lay out multi-step proofs 
+-- in a logical way...
+-- You can study the below definitions if you want, but all you really
+-- need to know is that they are "syntactic sugar" for trans. 
 
--- ─────────────────
--- ────[ SUMS ]─────
--- ─────────────────
+module ≡-Reasoning {A : Set} where
 
--- The type where elements are "either" an element of A or an element of B.
--- You can write ⊎ with \uplus
-data _⊎_ (A B : Set) : Set where
-  inl : A → A ⊎ B
-  inr : B → A ⊎ B
+  infix  1 begin_
+  infixr 2 step-≡-∣ step-≡-⟩
+  infix  3 _∎
 
--- We call the type A ⊎ B the "sum of A and B", or the "disjoint union 
--- of A and B"
+  begin_ : {x y : A} → x ≡ y → x ≡ y
+  begin x≡y = x≡y
 
-example4 : ℕ ⊎ Bool
-example4 = inr false
+  step-≡-∣ : (x : A) {y : A} → x ≡ y → x ≡ y
+  step-≡-∣ x x≡y = x≡y
 
-example5 : ℕ ⊎ Bool
-example5 = inl 5
+  step-≡-⟩ : (x : A) {y z : A} → y ≡ z → x ≡ y → x ≡ z
+  step-≡-⟩ x y≡z x≡y = trans x≡y y≡z
 
-example6 : ℕ ⊎ Bool → ℕ
-example6 (inl x) = x
-example6 (inr false) = 0
-example6 (inr true)  = 1
+  syntax step-≡-∣ x x≡y      = x ≡⟨⟩ x≡y
+  syntax step-≡-⟩ x y≡z x≡y  = x ≡⟨ x≡y ⟩ y≡z
 
+  _∎ : (x : A) → x ≡ x
+  x ∎ = refl
 
--- EXERCISE: Define this higher-order function that "conditionally runs one
--- of two functions"
-sumf : {A B C : Set} → (A → B) × (C → B) → A ⊎ C → B
-sumf (f , g) (inl a) = f a
-sumf (f , g) (inr c) = g c
+open ≡-Reasoning
 
+-- ────────────────────────────────────
+-- ────[ NATURAL NUMBER PROOFS II ]────
+-- ────────────────────────────────────
 
--- ────────────────────────
--- ────[ ISOMORPHISMS ]────
--- ────────────────────────
+-- Now we are going to build up a library of lemmas: these are smaller
+-- proofs that we can use to develop more complicated ones later.
 
--- It is important to have a notion of when two types are "the same".
--- For example, we could define another singleton type with a different name:
+-- TUTORIAL: prove that zero is a right unit for addition
++-unitr : (n : ℕ) → n + 0 ≡ n
++-unitr zero    = refl
++-unitr (suc n) = begin
+    suc n + 0
+  ≡⟨⟩ -- You can write ≡⟨ ⟩ with \==\< \>
+    suc (n + 0)
+  ≡⟨ cong suc (+-unitr n) ⟩
+    suc n
+  ∎ -- \qed
 
-data ⊤1 : Set where
-  tt1 : ⊤1
+-- TUTORIAL: prove that zero is a right unit for addition (without 
+-- the nice-but-perhaps-confusing syntax)
++-unitr' : (n : ℕ) → n + 0 ≡ n
++-unitr' zero    = refl
++-unitr' (suc n) = cong suc (+-unitr n)
 
--- But should the name of the type really matter? All we should care about are the
--- elements it contains. We can use the notion of an isomorphism to say when we
--- want to consider two types as the same. 
--- For example, an isomorphism between ⊤ and ⊤1 is a pair of functions:
+-- EXERCISE: prove that one is a left unit for multiplication.
+*-unitl : (n : ℕ) → 1 * n ≡ n
+*-unitl n = +-unitr n
 
-to : ⊤ → ⊤1
-to tt = tt1
+-- EXERCISE: prove that one is a right unit for multiplication. Try
+-- to use the begin, ≡⟨⟩, ∎ syntax. 
+*-unitr : (n : ℕ) → n * 1 ≡ n
+*-unitr zero    = refl
+*-unitr (suc n) = begin
+    suc n * 1
+  ≡⟨⟩
+    1 + n * 1
+  ≡⟨ cong (1 +_) (*-unitr n) ⟩
+    suc n
+  ∎ 
 
-from : ⊤1 → ⊤
-from tt1 = tt
+-- EXERCISE: prove that addition is associative.
++-assoc : (a b c : ℕ) → (a + b) + c ≡ a + (b + c)
++-assoc zero    b c = refl
++-assoc (suc a) b c = begin
+    (suc a + b) + c
+  ≡⟨⟩
+    suc ((a + b) + c)
+  ≡⟨ cong suc (+-assoc a b c) ⟩
+    suc a + (b + c)
+  ∎
 
--- such that they are mutually inverse to one another:
+-- EXERCISE: prove that addition with a successor on the right behaves
+-- as expected. 
+-- Hint: pattern match on n
++-sucr : (n m : ℕ) → n + suc m ≡ suc (n + m)
++-sucr zero    m = refl
++-sucr (suc n) m = begin
+    suc (n + suc m)
+  ≡⟨ cong suc (+-sucr n m) ⟩
+    suc (suc (n + m))
+  ≡⟨⟩
+    suc (suc n + m)
+  ∎
 
-from-to : (x : ⊤) → from (to x) ≡ x
-from-to tt = refl
+-- EXERCISE*: prove that addition is commutative
++-comm : (n m : ℕ) → n + m ≡ m + n
++-comm zero    m = sym (+-unitr m)
++-comm (suc n) m = begin
+    suc (n + m)
+  ≡⟨ cong suc (+-comm n m) ⟩
+    suc (m + n)
+  ≡⟨ sym (+-sucr m n) ⟩
+    m + suc n
+  ∎
 
-to-from : (x : ⊤1) → to (from x) ≡ x
-to-from tt1 = refl
+-- EXERCISE**: prove that multiplication distributes over 
+-- addition
+*+-distr : (a b c : ℕ) → a * (b + c) ≡ a * b + a * c 
+*+-distr zero    b c = refl
+*+-distr (suc a) b c = begin
+    b + c + a * (b + c)
+  ≡⟨ cong (λ x → b + c + x) (*+-distr a b c) ⟩
+    b + c + (a * b + a * c)
+  ≡⟨ +-assoc b c (a * b + a * c) ⟩
+    b + (c + (a * b + a * c))
+  ≡⟨ cong (b +_) (sym (+-assoc c (a * b) (a * c))) ⟩
+    b + (c + a * b + a * c)
+  ≡⟨ cong (λ x → b + (x + a * c)) (+-comm c (a * b)) ⟩
+    b + (a * b + c + a * c)
+  ≡⟨ {!   !} ⟩
+    {!   !}
+  ∎
 
--- Two functions with this "mutual inverse" property are enough evidence that
--- we should just consider the types ⊤ and ⊤1 as the same thing.
+-- EXERCISE***: prove that multiplication is commutative.
+-- This might require you to prove some separate lemmas 
+-- beforehand, the hard/creative part is to identify these.
+-- Hint: look at your proof of commutativity for _+_!
+*-zeror : (n : ℕ) → n * 0 ≡ 0
+*-zeror zero    = refl
+*-zeror (suc n) = *-zeror n 
 
--- EXERCISE*: Show that A × ⊤ is isomorphic to A
-frompair : {A : Set} → A × ⊤ → A
-frompair (a , tt) = a
+*-suc : (n m : ℕ) → n * suc m ≡ n + n * m
+*-suc zero    m = refl
+*-suc (suc n) m = begin
+    suc (m + n * suc m)
+  ≡⟨ cong (suc m +_) (*-suc n m) ⟩
+    suc (m + (n + n * m))
+  ≡⟨ cong suc (sym (+-assoc m n (n * m))) ⟩
+    suc ((m + n) + n * m)
+  ≡⟨ cong (λ x → suc (x + n * m)) (+-comm m n) ⟩
+    suc ((n + m) + n * m)
+  ≡⟨ cong suc ((+-assoc n m (n * m))) ⟩
+    suc (n + (m + n * m))
+  ∎
 
-topair : {A : Set} → A → A × ⊤
-topair a = (a , tt)
+*-comm : (n m : ℕ) → n * m ≡ m * n
+*-comm zero m = sym (*-zeror m)
+*-comm (suc n) m = begin
+    m + n * m
+  ≡⟨ cong (m +_) (*-comm n m) ⟩ 
+    m + m * n
+  ≡⟨ sym (*-suc m n) ⟩
+    m * suc n
+  ∎
 
-frompair-topair : {A : Set} → (x : A) → frompair (topair x) ≡ x
-frompair-topair a = refl
+-- ─────────────────────────────────────
+-- ────[ NATURAL NUMBER PROOFS III ]────
+-- ─────────────────────────────────────
 
-topair-frompair : {A : Set} → (x : A × ⊤) → topair (frompair x) ≡ x
-topair-frompair (a , tt) = refl
+-- An inductive less-then-or-equal-to type for natural numbers.
+-- Elements of n ≤ m can be thought of proofs of the statement 
+-- "n is less than or equal to m".
+-- ≤ is written with \le 
+infix 4 _≤_
+data _≤_ : ℕ → ℕ → Set where
+  zero≤ : {n : ℕ} → 0 ≤ n
+  suc≤ : {n m : ℕ} → (n≤m : n ≤ m) → suc n ≤ suc m
 
--- EXERCISE*: Show that A ⊎ ⊥ is isomorphic to A
-fromsum : {A : Set} → A ⊎ ⊥ → A
-fromsum (inl a) = a
+-- TUTORIAL: Less-than-or-equal-to is reflexive
+refl≤ : (n : ℕ) → n ≤ n
+refl≤ zero    = zero≤
+refl≤ (suc n) = suc≤ (refl≤ n)
 
-tosum : {A : Set} → A → A ⊎ ⊥
-tosum a = inl a
+-- TUTORIAL: Equality "injects" into less-then-or-equal-to
+≡-inj-≤ : {n m : ℕ} → n ≡ m → n ≤ m
+≡-inj-≤ refl = refl≤ _
 
-fromsum-tosum : {A : Set} → (x : A) → fromsum (tosum x) ≡ x
-fromsum-tosum a = refl
+-- EXERCISE: prove that less-then-or-equal-to is transitive.
+trans≤ : {a b c : ℕ} → a ≤ b → b ≤ c → a ≤ c
+trans≤ = {!   !}
 
-tosum-fromsum : {A : Set} → (x : A ⊎ ⊥) → tosum (fromsum x) ≡ x
-tosum-fromsum (inl a) = refl
+-- EXERCISE*: prove that addition is a congruent wrt less-then-or-equal-to.
+≤+-pres : {a b c : ℕ} → a ≤ b → a + c ≤ b + c
+≤+-pres = {!   !}
 
--- EXERCISE*: Show that A × B is isomorphic to B × A
-f1 : {A B : Set} → A × B → B × A
-f1 (a , b) = (b , a)
+-- EXERCISE*: prove that less-then-or-equal-to "has binary meets".
+≤*-pres : {a b c : ℕ} → a ≤ b → a ≤ c → a ≤ b * c
+≤*-pres = {!   !}
 
-t1 : {A B : Set} → B × A → A × B
-t1 (b , a) = (a , b)
+open import Data.Sum -- imports _⊎_ and helper functions
 
-f1t1 : {A B : Set} → (x : B × A) → f1 (t1 x) ≡ x
-f1t1 (b , a) = refl
-
-t1f1 : {A B : Set} → (x : A × B) → t1 (f1 x) ≡ x
-t1f1 (a , b) = refl
-
--- EXERCISE*: Show that A × (B × C) is isomorphic to (A × B) × C
-
--- All of these exercises show you that you can really think of × as 
--- being a sort of type multiplication, where the singleton type ⊤ plays 
--- the role of 1.
-
--- EXERCISE****: Show that ℕ ⊎ ℕ is isomorphic to ℕ
--- This is *very* difficult and may require some equality combinators and 
--- extra functions. Think of it as a project.
-
-open import Data.Nat.Properties
-
-f3 : ℕ ⊎ ℕ → ℕ
-f3 (inl n) = 2 * n
-f3 (inr n) = 2 * n + 1
-
-iseven : ℕ → Bool
-iseven zero = true
-iseven (suc zero) = false
-iseven (2+ n) = iseven n
-
-t3 : ℕ → ℕ ⊎ ℕ
-t3 n = if iseven n 
-        then inl (n / 2) 
-        else inr ((n / 2) ∸ 1)
-
-f3t3 : (n : ℕ) → f3 (t3 n) ≡ n
-f3t3 zero       = refl
-f3t3 (suc zero) = refl
-f3t3 (2+ n) with iseven n
-... | false = {!   !}
-... | true  = {!   !}
+-- EXERCISE**: dichotomy of ≤. This exercise might be a stretch, look at 
+-- the algebraic data types worksheet if you don't yet understand sum types.
+dichotomy : {a b : ℕ} → a ≤ b ⊎ b ≤ a
+dichotomy = {!   !}
