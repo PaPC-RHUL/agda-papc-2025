@@ -121,6 +121,11 @@ open ≡-Reasoning
 *-unitl : (n : ℕ) → 1 * n ≡ n
 *-unitl n = +-unitr n
 
+-- EXERCISE: prove that multiplication by 0 on the right is 0.
+*-zeror : (n : ℕ) → n * 0 ≡ 0
+*-zeror zero    = refl
+*-zeror (suc n) = *-zeror n 
+
 -- EXERCISE: prove that one is a right unit for multiplication. Try
 -- to use the begin, ≡⟨⟩, ∎ syntax. 
 *-unitr : (n : ℕ) → n * 1 ≡ n
@@ -182,18 +187,16 @@ open ≡-Reasoning
     b + (c + a * b + a * c)
   ≡⟨ cong (λ x → b + (x + a * c)) (+-comm c (a * b)) ⟩
     b + (a * b + c + a * c)
-  ≡⟨ {!   !} ⟩
-    {!   !}
+  ≡⟨ cong (b +_) (+-assoc (a * b) c (a * c)) ⟩
+    b + (a * b + (c + a * c))
+  ≡⟨ sym (+-assoc b (a * b) (c + a * c)) ⟩
+    (b + a * b) + (c + a * c)
   ∎
 
 -- EXERCISE***: prove that multiplication is commutative.
--- This might require you to prove some separate lemmas 
--- beforehand, the hard/creative part is to identify these.
+-- This might require you to prove another lemma beforehand,
+-- the hard/creative part is to identify this.
 -- Hint: look at your proof of commutativity for _+_!
-*-zeror : (n : ℕ) → n * 0 ≡ 0
-*-zeror zero    = refl
-*-zeror (suc n) = *-zeror n 
-
 *-suc : (n m : ℕ) → n * suc m ≡ n + n * m
 *-suc zero    m = refl
 *-suc (suc n) m = begin
@@ -236,25 +239,56 @@ refl≤ : (n : ℕ) → n ≤ n
 refl≤ zero    = zero≤
 refl≤ (suc n) = suc≤ (refl≤ n)
 
+-- TUTORIAL: successor is monotone wrt less-than-or-equal-to
+≤-suc : (n m : ℕ) → n ≤ m → n ≤ suc m
+≤-suc zero    m       p        = zero≤
+≤-suc (suc n) (suc m) (suc≤ p) = suc≤ (≤-suc n m p)
+
 -- TUTORIAL: Equality "injects" into less-then-or-equal-to
 ≡-inj-≤ : {n m : ℕ} → n ≡ m → n ≤ m
 ≡-inj-≤ refl = refl≤ _
 
 -- EXERCISE: prove that less-then-or-equal-to is transitive.
 trans≤ : {a b c : ℕ} → a ≤ b → b ≤ c → a ≤ c
-trans≤ = {!   !}
+trans≤ zero≤    y        = zero≤
+trans≤ (suc≤ x) (suc≤ y) = suc≤ (trans≤ x y)
 
 -- EXERCISE*: prove that addition is a congruent wrt less-then-or-equal-to.
-≤+-pres : {a b c : ℕ} → a ≤ b → a + c ≤ b + c
-≤+-pres = {!   !}
+-- Hint: you only need to case split on one of a, b, or c!
+≤+-pres : (a b c : ℕ) → a ≤ b → a + c ≤ b + c
+≤+-pres a b zero    p = subst (λ x → x ≤ b + 0) (sym (+-unitr a)) (subst (λ y → a ≤ y) (sym (+-unitr b)) p)
+≤+-pres a b (suc c) p = subst (λ x → x ≤ b + suc c) (sym (+-sucr a c)) (subst (λ y → suc (a + c) ≤ y) (sym (+-sucr b c)) (suc≤ (≤+-pres a b c p)))
 
--- EXERCISE*: prove that less-then-or-equal-to "has binary meets".
-≤*-pres : {a b c : ℕ} → a ≤ b → a ≤ c → a ≤ b * c
-≤*-pres = {!   !}
+-- EXERCISE*: prove that addition is monotone wrt less-than-or-equal-to
+≤+-mono : (n m : ℕ) → n ≤ n + m
+≤+-mono n zero    = subst (n ≤_) (sym (+-unitr n)) (refl≤ n)
+≤+-mono n (suc m) = subst (n ≤_) (sym (+-sucr n m)) (≤-suc n (n + m) (≤+-mono n m))
 
+-- EXERCISE*: prove that multiplication by at least one is monotone wrt
+-- less-than-or-equal-to.
+-- Hint: can you use the previous exercise directly...?
+≤*-suc : (n m : ℕ) → n ≤ suc m * n
+≤*-suc n m = ≤+-mono n (m * n)
+
+-- EXERCISE**: prove this!
+≤*-lem : (a b c : ℕ) → a ≤ b → a ≤ c → a ≤ b * c
+≤*-lem a zero    c       p q = p
+≤*-lem a (suc b) zero    p q = subst (a ≤_) (sym (*-zeror b)) q
+≤*-lem a (suc b) (suc c) p q = trans≤ q (≤+-mono (suc c) (b * suc c))
+
+open import Data.Product -- imports _×_ and helper functions
 open import Data.Sum -- imports _⊎_ and helper functions
 
 -- EXERCISE**: dichotomy of ≤. This exercise might be a stretch, look at 
 -- the algebraic data types worksheet if you don't yet understand sum types.
-dichotomy : {a b : ℕ} → a ≤ b ⊎ b ≤ a
-dichotomy = {!   !}
+-- Hint: look up the [_,_]′ function in the Data.Sum package
+dichotomy : (a b : ℕ) → a ≤ b ⊎ b ≤ a
+dichotomy zero    b       = inj₁ zero≤
+dichotomy a       zero    = inj₂ zero≤
+dichotomy (suc a) (suc b) = [ (λ p → inj₁ (suc≤ p)) , (λ p → inj₂ (suc≤ p)) ]′ (dichotomy a b)
+
+-- EXERCISE**: prove this!
+≤+-lem : (a b c : ℕ) → a + b ≤ c → (a ≤ c) × (b ≤ c)
+≤+-lem zero    b       c       p = (zero≤ , p)
+≤+-lem a       zero    c       p = (subst (_≤ c) (+-unitr a) p , zero≤)
+≤+-lem (suc a) (suc b) (suc c) (suc≤ p) = let (p , q) = ≤+-lem a (suc b) c p in suc≤ p , ≤-suc (suc b) c q

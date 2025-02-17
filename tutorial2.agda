@@ -120,6 +120,10 @@ open ≡-Reasoning
 *-unitl : (n : ℕ) → 1 * n ≡ n
 *-unitl n = {!   !}
 
+-- EXERCISE: prove that multiplication by 0 on the right is 0.
+*-zeror : (n : ℕ) → n * 0 ≡ 0
+*-zeror n = {!   !}
+
 -- EXERCISE: prove that one is a right unit for multiplication. Try
 -- to use the begin, ≡⟨⟩, ∎ syntax. 
 *-unitr : (n : ℕ) → n * 1 ≡ n
@@ -146,7 +150,8 @@ open ≡-Reasoning
 
 -- EXERCISE***: prove that multiplication is commutative.
 -- This might require you to prove some separate lemmas 
--- beforehand, the hard part is to identify these.
+-- beforehand, the hard/creative part is to identify these.
+-- Hint: look at your proof of commutativity for _+_!
 *-comm : (n m : ℕ) → n * m ≡ m * n
 *-comm n m = {!   !}
 
@@ -168,25 +173,47 @@ refl≤ : (n : ℕ) → n ≤ n
 refl≤ zero    = zero≤
 refl≤ (suc n) = suc≤ (refl≤ n)
 
+-- TUTORIAL: successor is monotone wrt less-than-or-equal-to
+≤-suc : (n m : ℕ) → n ≤ m → n ≤ suc m
+≤-suc zero    m       p        = zero≤
+≤-suc (suc n) (suc m) (suc≤ p) = suc≤ (≤-suc n m p)
+
 -- TUTORIAL: Equality "injects" into less-then-or-equal-to
 ≡-inj-≤ : {n m : ℕ} → n ≡ m → n ≤ m
 ≡-inj-≤ refl = refl≤ _
 
 -- EXERCISE: prove that less-then-or-equal-to is transitive.
 trans≤ : {a b c : ℕ} → a ≤ b → b ≤ c → a ≤ c
-trans≤ = {!   !}
+trans≤ p q = {!   !}
 
 -- EXERCISE*: prove that addition is a congruent wrt less-then-or-equal-to.
-≤+-pres : {a b c : ℕ} → a ≤ b → a + c ≤ b + c
-≤+-pres = {!   !}
+-- Hint: you only need to case split on one of a, b, or c!
+≤+-pres : (a b c : ℕ) → a ≤ b → a + c ≤ b + c
+≤+-pres a b c p = {!   !}
 
--- EXERCISE*: prove that less-then-or-equal-to "has binary meets".
-≤*-pres : {a b c : ℕ} → a ≤ b → a ≤ c → a ≤ b * c
-≤*-pres = {!   !}
+-- EXERCISE*: prove that addition is monotone wrt less-than-or-equal-to
+≤+-mono : (n m : ℕ) → n ≤ n + m
+≤+-mono n m = {!   !}
 
+-- EXERCISE*: prove that multiplication by at least one is monotone wrt
+-- less-than-or-equal-to.
+-- Hint: can you use the previous exercise directly...?
+≤*-suc : (n m : ℕ) → n ≤ suc m * n
+≤*-suc n m = {!   !}
+
+-- EXERCISE**: prove this!
+≤*-lem : (a b c : ℕ) → a ≤ b → a ≤ c → a ≤ b * c
+≤*-lem a b c p q = {!   !}
+
+open import Data.Product -- imports _×_ and helper functions
 open import Data.Sum -- imports _⊎_ and helper functions
 
 -- EXERCISE**: dichotomy of ≤. This exercise might be a stretch, look at 
 -- the algebraic data types worksheet if you don't yet understand sum types.
-dichotomy : {a b : ℕ} → a ≤ b ⊎ b ≤ a
-dichotomy = {!   !}
+-- Hint: look up the [_,_]′ function in the Data.Sum package
+dichotomy : (a b : ℕ) → a ≤ b ⊎ b ≤ a
+dichotomy a b = {!   !}
+
+-- EXERCISE**: prove this!
+≤+-lem : (a b c : ℕ) → a + b ≤ c → (a ≤ c) × (b ≤ c)
+≤+-lem a b c = {!   !}
